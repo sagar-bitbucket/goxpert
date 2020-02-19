@@ -1,0 +1,14 @@
+FROM golang:1.12
+
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0 
+ENV GOOS=linux
+
+RUN mkdir -p /go/src/gitlab.com/scalent/goxpert
+ADD .     /go/src/gitlab.com/scalent/goxpert/
+WORKDIR /go/src/gitlab.com/scalent/goxpert/
+
+RUN go get  github.com/canthefason/go-watcher
+RUN go install github.com/canthefason/go-watcher/cmd/watcher
+
+ENTRYPOINT  watcher -run gitlab.com/scalent/goxpert/services/course/cmd  -watch gitlab.com/scalent/goxpert/services/course

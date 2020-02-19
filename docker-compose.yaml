@@ -1,0 +1,72 @@
+version: "3"
+services:
+  db:
+    build:
+      context: .
+      dockerfile: database/Dockerfile
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "goxpert"
+      MYSQL_USER: "test_user"
+      MYSQL_PASSWORD: "test_password"
+    container_name: "mysql_test_db"
+    restart: always
+    ports:
+      - "3307:3306"
+    tty: true
+    volumes:
+      - goxpert-db:/var/lib/mysql
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 9191:80
+    external_links:
+      - db:mysql
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: password
+
+  user:
+    build:
+      context: .
+      dockerfile: Dockerfile_User
+    environment:
+      MYSQL_DB_HOST: "db"
+      MYSQL_DB_USER: "root"
+      MYSQL_DB_PASS: "password"
+      MYSQL_DB_PORT: "3306"
+      MYSQL_DB_NAME: "goxpert"
+      EMAIL_SECRET: "RcZ3tf5EDO9b0AFK"
+    restart: always
+    volumes:
+      - .:/go/src/gitlab.com/scalent/goxpert
+    container_name: user_service
+    ports:
+      - "8080:8080"
+    tty: true
+    depends_on:
+      - db
+  course:
+    build:
+      context: .
+      dockerfile: Dockerfile_Course
+    environment:
+      MYSQL_DB_HOST: "db"
+      MYSQL_DB_USER: "root"
+      MYSQL_DB_PASS: "password"
+      MYSQL_DB_PORT: "3306"
+      MYSQL_DB_NAME: "goxpert"
+    restart: always
+    volumes:
+      - .:/go/src/gitlab.com/scalent/goxpert
+    container_name: course_service
+    ports:
+      - "8081:8080"
+    tty: true
+    depends_on:
+      - db
+volumes:
+  goxpert-db:
